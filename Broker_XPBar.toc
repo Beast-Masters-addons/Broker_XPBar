@@ -1,0 +1,32 @@
+## Interface: 70000
+## Title: Broker: |cffffffffXP|rBar
+## Notes: Sparkly XP Bars that can be attached anywhere.
+## Version: 2.0 r058
+## Author: tritium
+## X-Credits: Wobin (For the original Fubar - XPFu), Pitbull 4 team for core logic of TextEngine module
+## X-Category: Interface Enhancements
+## Dependencies:
+## OptionalDeps: Ace3, Jostle-3.0, Crayon-3.0
+## SavedVariables: BrokerXPBar_DB
+
+## X-Embeds: Ace3
+#@no-lib-strip@
+embeds.xml
+#@end-no-lib-strip@
+
+Locales\locales.xml
+
+Utilities.lua
+Broker_XPBar.lua
+Options.lua
+Tooltip.lua
+Factions.lua
+History.lua
+ReputationHistory.lua
+Bar.lua
+MinimapButton.lua
+DataBroker.lua
+QuestInfo.lua
+Notifications.lua
+TextEngine.lua
+ScriptEnv.lua
