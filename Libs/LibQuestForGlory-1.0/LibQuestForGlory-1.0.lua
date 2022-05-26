@@ -51,8 +51,10 @@ end
 QFG.callbacks = QFG.callbacks or LibStub("CallbackHandler-1.0"):New(QFG)
 
 -- local references
-local GetOwnedBuildingInfo   = _G.C_Garrison.GetOwnedBuildingInfo
-local GetPlots               = _G.C_Garrison.GetPlots
+if _G.C_Garrison ~= nil then
+	local GetOwnedBuildingInfo   = _G.C_Garrison.GetOwnedBuildingInfo
+	local GetPlots               = _G.C_Garrison.GetPlots
+end
 local GetQuestUiMapID = _G.GetQuestUiMapID
 local UnitBuff               = _G.UnitBuff
 local AuraUtil               = _G.AuraUtil
@@ -72,10 +74,10 @@ local playerHasLvl3TradingPost = nil
 -- extra effort to check for trading post (data only available when inside garrison)
 local watchFrame = CreateFrame("Frame")
 
-watchFrame:RegisterEvent("GARRISON_UPDATE")
+--[[watchFrame:RegisterEvent("GARRISON_UPDATE")
 watchFrame:RegisterEvent("GARRISON_BUILDING_ACTIVATED")
 watchFrame:RegisterEvent("GARRISON_BUILDING_UPDATE")
-watchFrame:RegisterEvent("GARRISON_BUILDING_REMOVED")
+watchFrame:RegisterEvent("GARRISON_BUILDING_REMOVED")]]
 watchFrame:RegisterEvent("UNIT_AURA")
 
 -- TODO: WoW celebration package
