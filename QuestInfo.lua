@@ -18,12 +18,9 @@ local LibQFG = LibStub:GetLibrary("LibQuestForGlory-1.0")
 local Options
 
 -- local functions
-local GetNumQuestLogEntries    = _G.GetNumQuestLogEntries
-local GetQuestLogSelection     = _G.GetQuestLogSelection
+local GetNumQuestLogEntries    = _G.C_QuestLog.GetNumQuestLogEntries
 local GetMoney                 = _G.GetMoney
-local GetQuestLogTitle         = _G.GetQuestLogTitle
 local SelectQuestLogEntry      = _G.SelectQuestLogEntry
-local GetQuestLogRequiredMoney = _G.GetQuestLogRequiredMoney
 local GetNumQuestLeaderBoards  = _G.GetNumQuestLeaderBoards
 local GetQuestLogRewardXP      = _G.GetQuestLogRewardXP
 
@@ -110,22 +107,21 @@ function QuestInfo:Reset()
 	self:SetValue("IncompleteQuestXP", 0) 
 end
 
-function QuestInfo:IsQuestComplete(index, money)
+function QuestInfo:IsQuestComplete(index, questID, money)
 	money = money and money or GetMoney()
 
-	local _, _, _, _, _, isComplete  = GetQuestLogTitle(index)
+	if not questID then questID = C_QuestLog.GetQuestIDForLogIndex(index) end
+	local isComplete = C_QuestLog.IsComplete(questID)
 	
 	local numObjectives = GetNumQuestLeaderBoards(index)
-	local requiredMoney = GetQuestLogRequiredMoney(index)		
+	local requiredMoney = C_QuestLog.GetRequiredMoney(questID)	
 	
-	if isComplete and isComplete < 0 then
-		isComplete = false
-	elseif numObjectives == 0 and money >= requiredMoney then
+	if numObjectives == 0 and requiredMoney and requiredMoney > 0 and money >= requiredMoney then
 		-- breadcrumb quest without objectives other than money
 		isComplete = true
 	end
 	
-	return isComplete and true or false
+	return isComplete
 end
 
 function QuestInfo:Calculate()
@@ -141,20 +137,21 @@ function QuestInfo:Calculate()
 	local numQuestsEntries = GetNumQuestLogEntries()
 	
 	if numQuestsEntries > 0 then
-		local origIndex = GetQuestLogSelection()
 		local index = 0
 		local money = GetMoney()
 		
 		for index = 1, numQuestsEntries, 1 do
-			local title, _, _, isHeader, _, _, _, questId = GetQuestLogTitle(index)
-
-			if questId ~= moduleData.lastFinishedQuest and title and not isHeader then
-				SelectQuestLogEntry(index)
+			local questTable = C_QuestLog.GetInfo(index)
+			local title = questTable.title
+			local isHeader = questTable.isHeader
+			local questId = questTable.questID
+			
+			if questId and questId ~= moduleData.lastFinishedQuest and not isHeader then
 				
-				local isComplete = self:IsQuestComplete(index, money)								
-				local xp = GetQuestLogRewardXP()
+				local isComplete = self:IsQuestComplete(index, questId, money)								
+				local xp = GetQuestLogRewardXP(questId)
 
-				self:CalculateReputationRewards(index, isComplete, baseBonus, factionBonuses, lvl3TradingPostBonus)
+				self:CalculateReputationRewards(index, questId, isComplete, baseBonus, factionBonuses, lvl3TradingPostBonus)
 				
 				if isComplete then
 					completedXP = completedXP + xp
@@ -164,7 +161,6 @@ function QuestInfo:Calculate()
 			end
 		end
 		
-		SelectQuestLogEntry(origIndex)
 	end
 	
 	Options:SetCharSetting("TradingPostLvl3", LibQFG:PlayerHasTradingPostLvl3())
@@ -175,14 +171,12 @@ function QuestInfo:Calculate()
 	self:SetValue("IncompleteQuestRep", self:GetFactionValue(self:GetFaction(), "IncompleteQuestRep")) 
 end
 
-function QuestInfo:CalculateReputationRewards(index, isComplete, baseBonus, factionBonuses)
+function QuestInfo:CalculateReputationRewards(index, questId, isComplete, baseBonus, factionBonuses)
 	if isComplete == nil then
 		isComplete = self:IsQuestComplete(index)
 	end
 
-	local id = isComplete and "CompletedQuestRep" or "IncompleteQuestRep"	
-
-	SelectQuestLogEntry(index)
+	local id = isComplete and "CompletedQuestRep" or "IncompleteQuestRep"
 	
 	-- NOTE: For some reason Blizzard broke/removed the operation of GetNumQuestLogRewardFactions() and GetQuestLogRewardFactionInfo(i).
 	--       Instead of providing the correct data for the quest set via SelectQuestLogEntry(index)
@@ -198,7 +192,7 @@ function QuestInfo:CalculateReputationRewards(index, isComplete, baseBonus, fact
 	--
 	--     self:SetFactionValue(faction, id, self:GetFactionValue(faction, id) + floor(amount / 100))
 	-- end
-	local _, _, _, _, _, _, _, questId = GetQuestLogTitle(index)
+	
 
 	if questId == moduleData.lastFinishedQuest then
 		return

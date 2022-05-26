@@ -56,7 +56,7 @@ local GetPlots               = _G.C_Garrison.GetPlots
 local GetQuestWorldMapAreaID = _G.GetQuestWorldMapAreaID
 local UnitBuff               = _G.UnitBuff
 
-local LE_FOLLOWER_TYPE_GARRISON_6_0 = _G.LE_FOLLOWER_TYPE_GARRISON_6_0
+local LE_FOLLOWER_TYPE_GARRISON_6_0 = _G.Enum.GarrisonFollowerType.FollowerType_6_0
 
 local isHuman = false
 
@@ -75,7 +75,7 @@ watchFrame:RegisterEvent("GARRISON_UPDATE")
 watchFrame:RegisterEvent("GARRISON_BUILDING_ACTIVATED")
 watchFrame:RegisterEvent("GARRISON_BUILDING_UPDATE")
 watchFrame:RegisterEvent("GARRISON_BUILDING_REMOVED")
-watchFrame:RegisterEvent("PLAYER_AURAS_CHANGED")
+--watchFrame:RegisterEvent("UNIT_AURA")
 
 -- TODO: WoW celebration package
 local bonusBuffs = {
@@ -166,7 +166,7 @@ function QFG:GetBaseBonus()
 
 	local exclude = {}
 	
-	-- bonus for all factions 
+	--[[ bonus for all factions 
 	for buff, buffInfo in pairs(bonusBuffs) do
 		if not buffInfo.faction and not exclude[buff] and UnitBuff("player", buff) then
 			bonus = bonus + buffInfo.bonus
@@ -177,7 +177,7 @@ function QFG:GetBaseBonus()
 				end
 			end
 		end
-	end
+	end]]
 	
 	return bonus
 end
@@ -201,11 +201,20 @@ end
 -- @param factionId The id of the faction to query.
 function QFG:GetFactionBonus(factionId)
 	local bonus = 0
-
+	
 	-- bonus for given factions
-	for buff, buffInfo in pairs(bonusBuffs) do
+--[[	for buff, buffInfo in pairs(bonusBuffs) do
 		if buffInfo.faction == factionId and UnitBuff("player", buff) then
 			bonus = bonus + buffInfo.bonus
+		end
+	end]]
+	
+	for i=1,40 do
+		local n = UnitBuff("player", i)
+		if not n then break end
+		local t = bonusBuffs[n]
+		if t and t.faction == factionId then
+			bonus = bonus + t.bonus
 		end
 	end
 	
@@ -249,7 +258,7 @@ end
 -- @param questId The id of the quest to query.
 function QFG:GetQuestMapId(questId)
 	if not mapIds[questId] then
-		mapIds[questId] = GetQuestWorldMapAreaID(questId) or 0
+		mapIds[questId] = 0--GetQuestWorldMapAreaID(questId) or 0
 	end
 	
 	return mapIds[questId]
@@ -306,9 +315,11 @@ function QFG:CheckBonusBuffs()
 	end
 end
 
-watchFrame:SetScript("OnEvent", function(self, event, ...)
-	if event == "PLAYER_AURAS_CHANGED" then
-		QFG:CheckBonusBuffs()
+watchFrame:SetScript("OnEvent", function(self, event, arg1, ...)
+	if event == "UNIT_AURA" then
+		if arg1 == "player" then
+			QFG:CheckBonusBuffs()
+		end
 	else
 		QFG:CheckForLvl3TradingPost()
 	end

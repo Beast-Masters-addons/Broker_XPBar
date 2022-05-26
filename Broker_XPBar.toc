@@ -1,7 +1,7 @@
-## Interface: 70000
+## Interface: 90002
 ## Title: Broker: |cffffffffXP|rBar
 ## Notes: Sparkly XP Bars that can be attached anywhere.
-## Version: 2.0 r058
+## Version: 2.0 r064
 ## Author: tritium
 ## X-Credits: Wobin (For the original Fubar - XPFu), Pitbull 4 team for core logic of TextEngine module
 ## X-Category: Interface Enhancements

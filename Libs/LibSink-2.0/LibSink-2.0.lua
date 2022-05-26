@@ -1,6 +1,6 @@
 --[[
 Name: Sink-2.0
-Revision: $Rev: 113 $
+Revision: $Rev: 130 $
 Author(s): Funkydude
 Description: Library that handles chat output.
 Dependencies: LibStub, SharedMedia-3.0 (optional)
@@ -18,7 +18,7 @@ If you derive from the library or change it in any way, you are required to cont
 -- Sink-2.0
 
 local SINK20 = "LibSink-2.0"
-local SINK20_MINOR = 90103
+local SINK20_MINOR = 90106
 
 local sink = LibStub:NewLibrary(SINK20, SINK20_MINOR)
 if not sink then return end
@@ -43,12 +43,22 @@ local format, gsub, wipe, next, select = string.format, string.gsub, wipe, next,
 local IsInRaid, IsInGroup, SendChatMessage = IsInRaid, IsInGroup, SendChatMessage
 
 local L = {}
-L.DEFAULT = _G.DEFAULT -- "Default"
-L.CHAT = _G.CHAT -- "Chat"
-L.NONE = _G.NONE -- "None"
-L.RW = _G.RAID_WARNING -- "Raid Warning"
-L.BLIZZARD = _G.FLOATING_COMBATTEXT_LABEL -- "Floating Combat Text"
-L.CHANNEL = _G.CHANNEL -- "Channel"
+L.DEFAULT = "Default"
+L.CHAT = "Chat"
+L.NONE = "None"
+L.RW = "Raid Warning"
+L.BLIZZARD = "Floating Combat Text"
+L.CHANNEL = "Channel"
+
+L.SAY = "Say"
+L.PARTY = "Party"
+L.INSTANCE_CHAT = "Instance"
+L.GUILD_CHAT = "Guild Chat"
+L.OFFICER_CHAT = "Officer Chat"
+L.YELL = "Yell"
+L.RAID = "Raid"
+L.RAID_WARNING = "Raid Warning"
+L.GROUP = "Group"
 
 L.DEFAULT_DESC = "Route output from this addon through the first available handler, preferring scrolling combat text addons if available."
 L.ROUTE = "Route output from this addon through %s."
@@ -63,159 +73,278 @@ L.NONE_DESC = "Hide all messages from this addon."
 L.NOTINCHANNEL = "LibSink: %s (Sending to channel '%s' failed, you're not in it)"
 
 do
-	-- These localization strings are translated on WoWAce: http://www.wowace.com/addons/libsink-2-0/localization/
 	local l = GetLocale()
 	if l == "koKR" then
-L["DEFAULT_DESC"] = "처음으로 사용 가능한 트레이너를 통해 이 애드온으로부터 출력을 보냅니다." -- Needs review
-L["NONE_DESC"] = "이 애드온의 모든 메시지를 숨김니다." -- Needs review
-L["NOTINCHANNEL"] = "LibSink: %s (%s 채널로 전송 실패)" -- Needs review
-L["OUTPUT"] = "출력" -- Needs review
-L["OUTPUT_DESC"] = "어디에 이 애드온의 메시지를 출력할지 선택합니다." -- Needs review
-L["ROUTE"] = "%s|1을;를; 통해 이 애드온의 메시지를 출력합니다." -- Needs review
-L["SCROLL"] = "스크롤 영역" -- Needs review
-L["SCROLL_DESC"] = "메시지를 출력할 스크룰 영역을 설정합니다." -- Needs review
-L["STICKY"] = "점착" -- Needs review
-L["STICKY_DESC"] = "달라붙는 것처럼 보일 이 애드온의 메시지를 설정합니다." -- Needs review
-L["UIERROR"] = "블리자드 오류 창" -- Needs review
-
+		L.DEFAULT = "기본"
+		L.CHAT = "대화"
+		L.NONE = "없음"
+		L.RW = "공격대 경보"
+		L.BLIZZARD = "전투 상황 알림"
+		L.CHANNEL = "채널"
+		L.SAY = "일반 대화"
+		L.PARTY = "파티"
+		L.INSTANCE_CHAT = "인스턴스"
+		L.GUILD_CHAT = "길드 대화"
+		L.OFFICER_CHAT = "길드관리자 대화"
+		L.YELL = "외침"
+		L.RAID = "공격대"
+		L.RAID_WARNING = "공격대 경보"
+		L.GROUP = "파티"
+		L["DEFAULT_DESC"] = "처음으로 사용 가능한 트레이너를 통해 이 애드온으로부터 출력을 보냅니다." -- Needs review
+		L["NONE_DESC"] = "이 애드온의 모든 메시지를 숨김니다." -- Needs review
+		L["NOTINCHANNEL"] = "LibSink: %s (%s 채널로 전송 실패)" -- Needs review
+		L["OUTPUT"] = "출력" -- Needs review
+		L["OUTPUT_DESC"] = "어디에 이 애드온의 메시지를 출력할지 선택합니다." -- Needs review
+		L["ROUTE"] = "%s|1을;를; 통해 이 애드온의 메시지를 출력합니다." -- Needs review
+		L["SCROLL"] = "스크롤 영역" -- Needs review
+		L["SCROLL_DESC"] = "메시지를 출력할 스크룰 영역을 설정합니다." -- Needs review
+		L["STICKY"] = "점착" -- Needs review
+		L["STICKY_DESC"] = "달라붙는 것처럼 보일 이 애드온의 메시지를 설정합니다." -- Needs review
+		L["UIERROR"] = "블리자드 오류 창" -- Needs review
 	elseif l == "frFR" then
-L["DEFAULT_DESC"] = "Dirige la sortie de cet addon vers le premier gestionnaire disponible, de préférence les addons de texte de combat flottant si disponibles." -- Needs review
-L["NONE_DESC"] = "Cache tous les messages de cet addon." -- Needs review
-L["NOTINCHANNEL"] = "LibSink : %s (l'envoi vers le canal '%s' a échoué, car vous n'êtes pas dessus)" -- Needs review
-L["OUTPUT"] = "Sortie" -- Needs review
-L["OUTPUT_DESC"] = "Vers où diriger la sortie de cet addon." -- Needs review
-L["ROUTE"] = "Dirige la sortie de cet addon vers %s" -- Needs review
-L["SCROLL"] = "Sous-section" -- Needs review
-L["SCROLL_DESC"] = [=[Définit la sous-section dans laquelle les messages doivent apparaître.
+		L.DEFAULT = "Défaut"
+		L.CHAT = "Discussion"
+		L.NONE = "Aucun"
+		L.RW = "Avertissement Raid"
+		L.BLIZZARD = "Texte de combat flottant"
+		L.CHANNEL = "Canal"
+		L.SAY = "Dire"
+		L.PARTY = "Groupe"
+		L.INSTANCE_CHAT = "Instance"
+		L.GUILD_CHAT = "Guilde"
+		L.OFFICER_CHAT = "Officier"
+		L.YELL = "Crier"
+		L.RAID = "Raid"
+		L.RAID_WARNING = "Avertissement Raid"
+		L.GROUP = "Groupe"
+		L["DEFAULT_DESC"] = "Dirige la sortie de cet addon vers le premier gestionnaire disponible, de préférence les addons de texte de combat flottant si disponibles." -- Needs review
+		L["NONE_DESC"] = "Cache tous les messages de cet addon." -- Needs review
+		L["NOTINCHANNEL"] = "LibSink : %s (l'envoi vers le canal '%s' a échoué, car vous n'êtes pas dessus)" -- Needs review
+		L["OUTPUT"] = "Sortie" -- Needs review
+		L["OUTPUT_DESC"] = "Vers où diriger la sortie de cet addon." -- Needs review
+		L["ROUTE"] = "Dirige la sortie de cet addon vers %s" -- Needs review
+		L["SCROLL"] = "Sous-section" -- Needs review
+		L["SCROLL_DESC"] = [=[Définit la sous-section dans laquelle les messages doivent apparaître.
 
-Disponible uniquement pour certaines sorties.]=] -- Needs review
-L["STICKY"] = "Épinglé" -- Needs review
-L["STICKY_DESC"] = [=[Fait apparaître les messages de cet addon comme épinglés.
+		Disponible uniquement pour certaines sorties.]=] -- Needs review
+		L["STICKY"] = "Épinglé" -- Needs review
+		L["STICKY_DESC"] = [=[Fait apparaître les messages de cet addon comme épinglés.
 
-Disponible uniquement pour certaines sorties.]=] -- Needs review
-L["UIERROR"] = "Cadre des erreurs de Blizzard" -- Needs review
-
+		Disponible uniquement pour certaines sorties.]=] -- Needs review
+		L["UIERROR"] = "Cadre des erreurs de Blizzard" -- Needs review
 	elseif l == "deDE" then
-L["DEFAULT_DESC"] = "Die Ausgaben dieses Addons werden durch den ersten verfügbaren Handler geleitet, es werden Schwebender-Kampftext-Addons bevorzugt, wenn diese vorhanden sind."
-L["NONE_DESC"] = "Alle Meldungen dieses Addons verstecken."
-L["NOTINCHANNEL"] = "LibSink : %s (Senden auf Channel \"%s\" gescheitert, da du nicht in ihm bist)"
-L["OUTPUT"] = "Ausgabe"
-L["OUTPUT_DESC"] = "Wohin die Ausgaben dieses Addons geleitet werden sollen."
-L["ROUTE"] = "Die Ausgaben dieses Addons werden durch %s geleitet."
-L["SCROLL"] = "Unterabschnitt"
-L["SCROLL_DESC"] = [=[Stelle den Unterabschnitt ein, in dem die Nachrichten erscheinen sollen. 
+		L.DEFAULT = "Standard"
+		L.CHAT = "Chat"
+		L.NONE = "Nichts"
+		L.RW = "Schlachtzugswarnung"
+		L.BLIZZARD = "Schwebender Kampftext"
+		L.CHANNEL = "Channel"
+		L.SAY = "Sagen"
+		L.PARTY = "Gruppe"
+		L.INSTANCE_CHAT = "Instanz"
+		L.GUILD_CHAT = "Gildenchat"
+		L.OFFICER_CHAT = "Offizierchat"
+		L.YELL = "Schreien"
+		L.RAID = "Schlachtzug"
+		L.RAID_WARNING = "Schlachtzugswarnung"
+		L.GROUP = "Gruppe"
+		L["DEFAULT_DESC"] = "Die Ausgaben dieses Addons werden durch den ersten verfügbaren Handler geleitet, es werden Schwebender-Kampftext-Addons bevorzugt, wenn diese vorhanden sind."
+		L["NONE_DESC"] = "Alle Meldungen dieses Addons verstecken."
+		L["NOTINCHANNEL"] = "LibSink : %s (Senden auf Channel \"%s\" gescheitert, da du nicht in ihm bist)"
+		L["OUTPUT"] = "Ausgabe"
+		L["OUTPUT_DESC"] = "Wohin die Ausgaben dieses Addons geleitet werden sollen."
+		L["ROUTE"] = "Die Ausgaben dieses Addons werden durch %s geleitet."
+		L["SCROLL"] = "Unterabschnitt"
+		L["SCROLL_DESC"] = [=[Stelle den Unterabschnitt ein, in dem die Nachrichten erscheinen sollen. 
 
-Dies ist nur für manche Ausgaben verfügbar.]=]
-L["STICKY"] = "Fixiert"
-L["STICKY_DESC"] = [=[Lässt Nachrichten dieses Addons als fixiert erscheinen, das heißt, dass die Ausgaben an einer festen Position auf dem Bildschirm erscheinen und dort wieder verschwinden.
+		Dies ist nur für manche Ausgaben verfügbar.]=]
+		L["STICKY"] = "Fixiert"
+		L["STICKY_DESC"] = [=[Lässt Nachrichten dieses Addons als fixiert erscheinen, das heißt, dass die Ausgaben an einer festen Position auf dem Bildschirm erscheinen und dort wieder verschwinden.
 
-Dies ist nur für manche Ausgaben verfügbar.]=]
-L["UIERROR"] = "Blizzards Fehlerfenster"
-
+		Dies ist nur für manche Ausgaben verfügbar.]=]
+		L["UIERROR"] = "Blizzards Fehlerfenster"
 	elseif l == "zhCN" then
-L["DEFAULT_DESC"] = "从这个插件路由输出到第一个可用的处理程序，倾向于可用的滚动战斗文本插件。"
-L["NONE_DESC"] = "隐藏此插件全部消息。"
-L["NOTINCHANNEL"] = "LibSink：%s（发送到频道“%s”失败，不在此频道）"
-L["OUTPUT"] = "输出"
-L["OUTPUT_DESC"] = "从此插件路由输出。"
-L["ROUTE"] = "从此插件通过%s路由输出。"
-L["SCROLL"] = "子区段"
-L["SCROLL_DESC"] = [=[设置子区段消息出现状态。
+		L.DEFAULT = "默认"
+		L.CHAT = "聊天"
+		L.NONE = "无"
+		L.RW = "团队通知"
+		L.BLIZZARD = "浮动战斗信息"
+		L.CHANNEL = "频道"
+		L.SAY = "说"
+		L.PARTY = "小队"
+		L.INSTANCE_CHAT = "副本"
+		L.GUILD_CHAT = "公会聊天"
+		L.OFFICER_CHAT = "官员聊天"
+		L.YELL = "大喊"
+		L.RAID = "团队"
+		L.RAID_WARNING = "团队通知"
+		L.GROUP = "小队"
+		L["DEFAULT_DESC"] = "从这个插件路由输出到第一个可用的处理程序，倾向于可用的滚动战斗文本插件。"
+		L["NONE_DESC"] = "隐藏此插件全部消息。"
+		L["NOTINCHANNEL"] = "LibSink：%s（发送到频道“%s”失败，不在此频道）"
+		L["OUTPUT"] = "输出"
+		L["OUTPUT_DESC"] = "从此插件路由输出。"
+		L["ROUTE"] = "从此插件通过%s路由输出。"
+		L["SCROLL"] = "子区段"
+		L["SCROLL_DESC"] = [=[设置子区段消息出现状态。
 
-只在一些输出可用。]=]
-L["STICKY"] = "固定"
-L["STICKY_DESC"] = [=[设置信息从此插件出现状态为固定。
+		只在一些输出可用。]=]
+		L["STICKY"] = "固定"
+		L["STICKY_DESC"] = [=[设置信息从此插件出现状态为固定。
 
-只在一些输出可用。]=]
-L["UIERROR"] = "暴雪错误框体"
-
+		只在一些输出可用。]=]
+		L["UIERROR"] = "暴雪错误框体"
 	elseif l == "zhTW" then
-L["DEFAULT_DESC"] = "從這個插件路由輸出到第一個可用的處理程式，傾向於可用的滾動戰鬥文本插件。"
-L["NONE_DESC"] = "隱藏此插件全部訊息。"
-L["NOTINCHANNEL"] = "LibSink：%s（發送到頻道“%s”失敗，不在此頻道）"
-L["OUTPUT"] = "輸出"
-L["OUTPUT_DESC"] = "從此插件路由輸出。"
-L["ROUTE"] = "從此插件通過%s路由輸出。"
-L["SCROLL"] = "子區段"
-L["SCROLL_DESC"] = [=[設置子區段訊息出現狀態。
+		L.DEFAULT = "預設值"
+		L.CHAT = "對話"
+		L.NONE = "無"
+		L.RW = "團隊警告"
+		L.BLIZZARD = "浮動戰鬥文字"
+		L.CHANNEL = "頻道"
+		L.SAY = "說"
+		L.PARTY = "隊伍"
+		L.INSTANCE_CHAT = "副本"
+		L.GUILD_CHAT = "公會對話"
+		L.OFFICER_CHAT = "幹部對話"
+		L.YELL = "大喊"
+		L.RAID = "團隊"
+		L.RAID_WARNING = "團隊警告"
+		L.GROUP = "小隊"
+		L["DEFAULT_DESC"] = "從這個插件路由輸出到第一個可用的處理程式，傾向於可用的滾動戰鬥文本插件。"
+		L["NONE_DESC"] = "隱藏此插件全部訊息。"
+		L["NOTINCHANNEL"] = "LibSink：%s（發送到頻道“%s”失敗，不在此頻道）"
+		L["OUTPUT"] = "輸出"
+		L["OUTPUT_DESC"] = "從此插件路由輸出。"
+		L["ROUTE"] = "從此插件通過%s路由輸出。"
+		L["SCROLL"] = "子區段"
+		L["SCROLL_DESC"] = [=[設置子區段訊息出現狀態。
 
-只在一些輸出可用。 ]=]
-L["STICKY"] = "固定"
-L["STICKY_DESC"] = [=[設置訊息從此插件出現狀態為固定。
+		只在一些輸出可用。 ]=]
+		L["STICKY"] = "固定"
+		L["STICKY_DESC"] = [=[設置訊息從此插件出現狀態為固定。
 
-只在一些輸出可用。 ]=]
-L["UIERROR"] = "暴雪錯誤框體"
-
+		只在一些輸出可用。 ]=]
+		L["UIERROR"] = "暴雪錯誤框體"
 	elseif l == "ruRU" then
-L["DEFAULT_DESC"] = "Направлять вывод из этого аддона через первый доступный обработчик, предпочитая аддоны прокрутки журнала боя если они доступны."
-L["NONE_DESC"] = "Скрыть все сообщения этого аддона"
-L["NOTINCHANNEL"] = "LibSink: %s (Отправка в канал '%s' неудачна, вы не в нем)"
-L["OUTPUT"] = "Вывод"
-L["OUTPUT_DESC"] = "Куда направлять вывод из этого аддона."
-L["ROUTE"] = "Направлять вывод из этого аддона через %s."
-L["SCROLL"] = "Подразделы"
-L["SCROLL_DESC"] = [=[Установить подраздел, где должны появляться сообщения.
+		L.DEFAULT = "По умолчанию"
+		L.CHAT = "Каналы"
+		L.NONE = "Нет"
+		L.RW = "Объявление рейду"
+		L.BLIZZARD = "Текст боя"
+		L.CHANNEL = "Канал"
+		L.SAY = "Речь"
+		L.PARTY = "Группа"
+		L.INSTANCE_CHAT = "Подземелье"
+		L.GUILD_CHAT = "Канал гильдии"
+		L.OFFICER_CHAT = "Канал офицеров"
+		L.YELL = "Крик"
+		L.RAID = "Рейд"
+		L.RAID_WARNING = "Объявление рейду"
+		L.GROUP = "Группа"
+		L["DEFAULT_DESC"] = "Направлять вывод из этого аддона через первый доступный обработчик, предпочитая аддоны прокрутки журнала боя если они доступны."
+		L["NONE_DESC"] = "Скрыть все сообщения этого аддона"
+		L["NOTINCHANNEL"] = "LibSink: %s (Отправка в канал '%s' неудачна, вы не в нем)"
+		L["OUTPUT"] = "Вывод"
+		L["OUTPUT_DESC"] = "Куда направлять вывод из этого аддона."
+		L["ROUTE"] = "Направлять вывод из этого аддона через %s."
+		L["SCROLL"] = "Подразделы"
+		L["SCROLL_DESC"] = [=[Установить подраздел, где должны появляться сообщения.
 
-Доступно только для некоторых выводов.]=]
-L["STICKY"] = "Прикрепление"
-L["STICKY_DESC"] = [=[Прикреплять сообщения из этого аддона
+		Доступно только для некоторых выводов.]=]
+		L["STICKY"] = "Прикрепление"
+		L["STICKY_DESC"] = [=[Прикреплять сообщения из этого аддона
 
-Доступно только для некоторых выводов.]=]
-L["UIERROR"] = "Фрейм ошибок Blizzard."
+		Доступно только для некоторых выводов.]=]
+		L["UIERROR"] = "Фрейм ошибок Blizzard."
+	elseif l == "esES" or l == "esMX" then
+		L.DEFAULT = "Predeterminado"
+		L.CHAT = "Chat"
+		L.NONE = "Ninguno"
+		L.RW = "Aviso de la banda"
+		L.BLIZZARD = "Texto flotante de combate"
+		L.CHANNEL = "Canal"
+		L.SAY = "Hablar"
+		L.PARTY = "Grupo"
+		L.INSTANCE_CHAT = "Estancia"
+		L.GUILD_CHAT = "Chat de hermandad"
+		L.OFFICER_CHAT = "Chat de oficiales"
+		L.YELL = "Gritar"
+		L.RAID = "Banda"
+		L.RAID_WARNING = "Aviso de la banda"
+		L.GROUP = "Grupo"
+		L["DEFAULT_DESC"] = "Ruta de salida de este addon mediante el primer controlador disponible, prefiriendo el desplazamiento de texto de combate si está disponible." -- Needs review
+		L["NONE_DESC"] = "Oculta todos los mensajes de este addon." -- Needs review
+		L["NOTINCHANNEL"] = "LibSink: %s (Falló al enviar al canal '%s', no estás en el)" -- Needs review
+		L["OUTPUT"] = "Salida" -- Needs review
+		L["OUTPUT_DESC"] = "Donde se ajustará la ruta de salida de este addon." -- Needs review
+		L["ROUTE"] = "Ruta de salida de este addon mediante %s." -- Needs review
+		L["SCROLL"] = "Sub sección." -- Needs review
+		L["SCROLL_DESC"] = [=[Ajusta la sub sección donde los mensajes deben aparecer.
 
-	elseif l == "esES" then
-L["DEFAULT_DESC"] = "Ruta de salida de este addon mediante el primer controlador disponible, prefiriendo el desplazamiento de texto de combate si está disponible." -- Needs review
-L["NONE_DESC"] = "Oculta todos los mensajes de este addon." -- Needs review
-L["NOTINCHANNEL"] = "LibSink: %s (Falló al enviar al canal '%s', no estás en el)" -- Needs review
-L["OUTPUT"] = "Salida" -- Needs review
-L["OUTPUT_DESC"] = "Donde se ajustará la ruta de salida de este addon." -- Needs review
-L["ROUTE"] = "Ruta de salida de este addon mediante %s." -- Needs review
-L["SCROLL"] = "Sub sección." -- Needs review
-L["SCROLL_DESC"] = [=[Ajusta la sub sección donde los mensajes deben aparecer.
+		Disponible sólo para algunas salidas.]=] -- Needs review
+		L["STICKY"] = "Chincheta" -- Needs review
+		L["STICKY_DESC"] = [=[Ajusta los mensajes de este addon para que aparezcan como chincheta.
 
-Disponible sólo para algunas salidas.]=] -- Needs review
-L["STICKY"] = "Chincheta" -- Needs review
-L["STICKY_DESC"] = [=[Ajusta los mensajes de este addon para que aparezcan como chincheta.
-
-Disponible sólo para algunas salidas.]=] -- Needs review
-L["UIERROR"] = "Marco de Errores de Blizzard" -- Needs review
-
-	elseif l == "esMX" then
-L["DEFAULT_DESC"] = "Ruta de salida de este addon mediante el primer controlador disponible, prefiriendo el desplazamiento de texto de combate si está disponible." -- Needs review
-L["NONE_DESC"] = "Oculta todos los mensajes de este addon." -- Needs review
-L["NOTINCHANNEL"] = "LibSink: %s (Falló al enviar al canal '%s', no estás en el)" -- Needs review
-L["OUTPUT"] = "Salida" -- Needs review
-L["OUTPUT_DESC"] = "Donde se ajustará la ruta de salida de este addon." -- Needs review
-L["ROUTE"] = "Ruta de salida de este addon mediante %s." -- Needs review
-L["SCROLL"] = "Sub sección." -- Needs review
-L["SCROLL_DESC"] = [=[Ajusta la sub sección donde los mensajes deben aparecer.
-
-Disponible sólo para algunas salidas.]=] -- Needs review
-L["STICKY"] = "Chincheta" -- Needs review
-L["STICKY_DESC"] = [=[Ajusta los mensajes de este addon para que aparezcan como chincheta.
-
-Disponible sólo para algunas salidas.]=] -- Needs review
-L["UIERROR"] = "Marco de Errores de Blizzard" -- Needs review
-
+		Disponible sólo para algunas salidas.]=] -- Needs review
+		L["UIERROR"] = "Marco de Errores de Blizzard" -- Needs review
 	elseif l == "ptBR" then
-
+		L.DEFAULT = "Padrão"
+		L.CHAT = "Bate-papo"
+		L.NONE = "Nenhum"
+		L.RW = "Aviso do raide"
+		L.BLIZZARD = "Texto de combate"
+		L.CHANNEL = "Canal"
+		L.SAY = "Dizer"
+		L.PARTY = "Grupo"
+		L.INSTANCE_CHAT = "Instância"
+		L.GUILD_CHAT = "Bate-papo da guilda"
+		L.OFFICER_CHAT = "Bate-papo de oficiais"
+		L.YELL = "Gritar"
+		L.RAID = "Raide"
+		L.RAID_WARNING = "Aviso do raide"
+		L.GROUP = "Grupo"
+		--L.DEFAULT_DESC = "Route output from this addon through the first available handler, preferring scrolling combat text addons if available."
+		--L.ROUTE = "Route output from this addon through %s."
+		--L.UIERROR = "Blizzard Error Frame"
+		--L.OUTPUT = "Output"
+		--L.OUTPUT_DESC = "Where to route the output from this addon."
+		--L.SCROLL = "Sub section"
+		--L.SCROLL_DESC = "Set the sub section where messages should appear.\n\nOnly available for some outputs."
+		--L.STICKY = "Sticky"
+		--L.STICKY_DESC = "Set messages from this addon to appear as sticky.\n\nOnly available for some outputs."
+		--L.NONE_DESC = "Hide all messages from this addon."
+		--L.NOTINCHANNEL = "LibSink: %s (Sending to channel '%s' failed, you're not in it)"
 	elseif l == "itIT" then
-L["DEFAULT_DESC"] = "Indirizza l'uscita da questo addon attraverso il primo metodo di uscita disponibile, preferibilmente un addon visivo a schermo se disponibile."
-L["NONE_DESC"] = "Nasconti tutti i messaggi per questo addon."
-L["NOTINCHANNEL"] = "LibSink: %s (Invio al canale '%s' non riuscito, non sei dentro)"
-L["OUTPUT"] = "Uscita"
-L["OUTPUT_DESC"] = "Dove indirizzare l'uscita da questo addon."
-L["ROUTE"] = "Indirizza l'uscita da questo addon attraverso %s."
-L["SCROLL"] = "Sotto sezione"
-L["SCROLL_DESC"] = [=[Imposta la sotto sezione in cui i messaggi devono apparire.
+		L.DEFAULT = "Predefinito"
+		L.CHAT = "Chat"
+		L.NONE = "Nessuno"
+		L.RW = "Avviso incursione"
+		L.BLIZZARD = "Testo di combattimento"
+		L.CHANNEL = "Canale"
+		L.SAY = "Parla"
+		L.PARTY = "Gruppo"
+		L.INSTANCE_CHAT = "Istanza"
+		L.GUILD_CHAT = "Chat di gilda"
+		L.OFFICER_CHAT = "Chat degli ufficiali"
+		L.YELL = "Urla"
+		L.RAID = "Incursione"
+		L.RAID_WARNING = "Avviso incursione"
+		L.GROUP = "Gruppo"
+		L["DEFAULT_DESC"] = "Indirizza l'uscita da questo addon attraverso il primo metodo di uscita disponibile, preferibilmente un addon visivo a schermo se disponibile."
+		L["NONE_DESC"] = "Nasconti tutti i messaggi per questo addon."
+		L["NOTINCHANNEL"] = "LibSink: %s (Invio al canale '%s' non riuscito, non sei dentro)"
+		L["OUTPUT"] = "Uscita"
+		L["OUTPUT_DESC"] = "Dove indirizzare l'uscita da questo addon."
+		L["ROUTE"] = "Indirizza l'uscita da questo addon attraverso %s."
+		L["SCROLL"] = "Sotto sezione"
+		L["SCROLL_DESC"] = [=[Imposta la sotto sezione in cui i messaggi devono apparire.
 
-Disponibile solo per alcune uscite.]=]
-L["STICKY"] = "Importante"
-L["STICKY_DESC"] = [=[Imposta i messaggi di questo addon di apparire come importanti.
+		Disponibile solo per alcune uscite.]=]
+		L["STICKY"] = "Importante"
+		L["STICKY_DESC"] = [=[Imposta i messaggi di questo addon di apparire come importanti.
 
-Disponibile solo per alcune uscite.]=]
-L["UIERROR"] = "Frame Errore Blizzard"
-
+		Disponibile solo per alcune uscite.]=]
+		L["UIERROR"] = "Frame Errore Blizzard"
 	end
 end
 
@@ -255,15 +384,15 @@ local function blizzard(addon, text, r, g, b, font, size, outline, sticky, _, ic
 end
 
 sink.channelMapping = sink.channelMapping or {
-	[_G.SAY] = "SAY",
-	[_G.PARTY] = "PARTY",
-	[_G.INSTANCE_CHAT] = "INSTANCE_CHAT",
-	[_G.GUILD_CHAT] = "GUILD",
-	[_G.OFFICER_CHAT] = "OFFICER",
-	[_G.YELL] = "YELL",
-	[_G.RAID] = "RAID",
-	[_G.RAID_WARNING] = "RAID_WARNING",
-	[_G.GROUP] = "GROUP",
+	[L.SAY] = "SAY",
+	[L.PARTY] = "PARTY",
+	[L.INSTANCE_CHAT] = "INSTANCE_CHAT",
+	[L.GUILD_CHAT] = "GUILD",
+	[L.OFFICER_CHAT] = "OFFICER",
+	[L.YELL] = "YELL",
+	[L.RAID] = "RAID",
+	[L.RAID_WARNING] = "RAID_WARNING",
+	[L.GROUP] = "GROUP",
 }
 sink.channelMappingIds = sink.channelMappingIds or {}
 sink.frame = sink.frame or CreateFrame("Frame")
@@ -273,7 +402,7 @@ sink.frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 do
 	local function loop(...)
 		wipe(sink.channelMappingIds)
-		for i = 1, select("#", ...), 2 do
+		for i = 1, select("#", ...), 3 do
 			local id, name = select(i, ...)
 			sink.channelMappingIds[name] = id
 		end

@@ -50,7 +50,7 @@ NS.Addon = Addon
 Addon.MODNAME   = "BrokerXPBar"
 Addon.FULLNAME  = "Broker: XP Bar"
 
-Addon.MAX_LEVEL = MAX_PLAYER_LEVEL_TABLE[GetExpansionLevel()]
+Addon.MAX_LEVEL = GetMaxLevelForExpansionLevel(GetExpansionLevel())	--Addon.MAX_LEVEL = MAX_PLAYER_LEVEL_TABLE[GetExpansionLevel()]
 
 -- player level
 Addon.playerLvl       = UnitLevel("player")
@@ -962,6 +962,8 @@ function Addon:COMBAT_TEXT_UPDATE(_, msgType, factionName, amount)
 		return
 	end
 	
+	local factionName, amount = GetCurrentCombatTextEventInfo()
+	
 	if (amount < 0 and self:GetSetting("AutoTrackOnLoss")) or 
 	   (amount > 0 and self:GetSetting("AutoTrackOnGain")) then
 		if factionName then
@@ -1090,6 +1092,7 @@ function Addon:IsBarRequired(bar)
 end
 
 function Addon:ShowBlizzardBars(show)
+	if true then return end
 	if show then
 		-- restore the blizzard frames
 		MainMenuExpBar:SetScript("OnEvent", MainMenuExpBar_OnEvent)
