@@ -1,0 +1,77 @@
+﻿package-as: Broker_XPBar
+
+externals:
+  Libs/AceAddon-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceAddon-3.0
+    tag: latest
+  Libs/AceBucket-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceBucket-3.0
+    tag: latest
+  Libs/AceComm-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceComm-3.0
+    tag: latest
+  Libs/AceConfig-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceConfig-3.0
+  Libs/AceConsole-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceConsole-3.0
+    tag: latest
+  Libs/AceDB-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceDB-3.0
+    tag: latest
+  Libs/AceDBOptions-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceDBOptions-3.0
+    tag: latest
+  Libs/AceEvent-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceEvent-3.0
+    tag: latest
+  Libs/AceGUI-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceGUI-3.0
+    tag: latest
+  Libs/AceGUI-3.0-SharedMediaWidgets:
+    url: https://repos.wowace.com/wow/ace-gui-3-0-shared-media-widgets/trunk/AceGUI-3.0-SharedMediaWidgets
+    tag: latest
+  Libs/AceLocale-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceLocale-3.0
+    tag: latest
+  Libs/AceTimer-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceTimer-3.0
+    tag: latest
+  Libs/CallbackHandler-1.0:
+    url: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
+    tag: latest
+  Libs/LibCrayon-3.0:
+    url: https://repos.wowace.com/wow/libcrayon-3-0/trunk
+    tag: latest
+  Libs/LibDataBroker-1.1:
+    url: https://github.com/tekkub/libdatabroker-1-1.git
+    tag: v1.1.4
+  Libs/LibJostle-3.0:
+    url: https://repos.wowace.com/wow/libjostle-3-0/trunk
+    tag: latest
+  Libs/LibQTip-1.0:
+    url: https://repos.wowace.com/wow/libqtip-1-0
+    tag: latest
+
+  Libs/LibQuestXP-BCC:
+    url: https://github.com/MrFox42/libquestxp.git
+    tag: 2.0.3-bc
+  Libs/LibQuestXP-Classic:
+    url: https://github.com/MrFox42/libquestxp.git
+    tag: 1.0.9-classic
+  Libs/LibSharedMedia-3.0:
+    url: https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
+    tag: latest
+  Libs/LibSink-2.0:
+    url: https://repos.curseforge.com/wow/libsink-2-0/trunk
+    tag: latest
+  Libs/LibStub:
+    url: https://repos.wowace.com/wow/libstub/trunk
+  Libs/LibToast-1.0:
+    url: https://repos.curseforge.com/wow/libtoast-1-0
+
+ignore:
+  - tests
+  - Libs/LibStub/tests
+
+enable-nolib-creation: yes
+
