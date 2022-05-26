@@ -957,10 +957,13 @@ end
 
 -- TODO: bound to CombatTextSetActiveUnit("unit")
 --       could track incorrect unit
-function Addon:COMBAT_TEXT_UPDATE(_, msgType, factionName, amount)
+function Addon:COMBAT_TEXT_UPDATE(event, msgType)
     if msgType ~= "FACTION" then
 		return
 	end
+	
+	local factionName, arg3, arg4 = GetCurrentCombatTextEventInfo();
+	local amount = tonumber(arg3)
 	
 	if (amount < 0 and self:GetSetting("AutoTrackOnLoss")) or 
 	   (amount > 0 and self:GetSetting("AutoTrackOnGain")) then
@@ -987,8 +990,8 @@ function Addon:CHAT_MSG_COMBAT_FACTION_CHANGE()
 	self:UpdateStanding()
 end
 
-function Addon:COMBAT_LOG_EVENT_UNFILTERED(event, param1, param2, param3, param4)
-	if param2 == "PARTY_KILL" then
+function Addon:COMBAT_LOG_EVENT_UNFILTERED(timestamp, logEvent)
+	if logEvent == "PARTY_KILL" then
 		History:AddKill(0, 0, 0)
 		ReputationHistory:AddKill()
 	end
@@ -1092,24 +1095,36 @@ end
 function Addon:ShowBlizzardBars(show)
 	if show then
 		-- restore the blizzard frames
-		MainMenuExpBar:SetScript("OnEvent", MainMenuExpBar_OnEvent)
-		MainMenuExpBar:Show()
+		if MainMenuExpBar then
+			MainMenuExpBar:SetScript("OnEvent", MainMenuExpBar_OnEvent)
+			MainMenuExpBar:Show()
+		end
 	
-		ReputationWatchBar:SetScript("OnEvent", ReputationWatchBar_OnEvent)
-		ReputationWatchBar:Show()
+		if ReputationWatchBar then
+			ReputationWatchBar:SetScript("OnEvent", ReputationWatchBar_OnEvent)
+			ReputationWatchBar:Show()
+		end
 
-		ExhaustionTick:SetScript("OnEvent", ExhaustionTick_OnEvent)
-		ExhaustionTick:Show() 
+		if ExhaustionTick then
+			ExhaustionTick:SetScript("OnEvent", ExhaustionTick_OnEvent)
+			ExhaustionTick:Show() 
+		end
 	else
 		-- hide the blizzard frames
-		MainMenuExpBar:SetScript("OnEvent", nil)
-		MainMenuExpBar:Hide()
+		if MainMenuExpBar then
+			MainMenuExpBar:SetScript("OnEvent", nil)
+			MainMenuExpBar:Hide()
+		end
 
-		ReputationWatchBar:SetScript("OnEvent", nil)
-		ReputationWatchBar:Hide()
+		if ReputationWatchBar then
+			ReputationWatchBar:SetScript("OnEvent", nil)
+			ReputationWatchBar:Hide()
+		end
 
-		ExhaustionTick:SetScript("OnEvent", nil)
-		ExhaustionTick:Hide()
+		if ExhaustionTick then
+			ExhaustionTick:SetScript("OnEvent", nil)
+			ExhaustionTick:Hide()
+		end
 	end
 end
 

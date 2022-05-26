@@ -53,8 +53,9 @@ QFG.callbacks = QFG.callbacks or LibStub("CallbackHandler-1.0"):New(QFG)
 -- local references
 local GetOwnedBuildingInfo   = _G.C_Garrison.GetOwnedBuildingInfo
 local GetPlots               = _G.C_Garrison.GetPlots
-local GetQuestWorldMapAreaID = _G.GetQuestWorldMapAreaID
+local GetQuestUiMapID = _G.GetQuestUiMapID
 local UnitBuff               = _G.UnitBuff
+local AuraUtil               = _G.AuraUtil
 
 local LE_FOLLOWER_TYPE_GARRISON_6_0 = _G.LE_FOLLOWER_TYPE_GARRISON_6_0
 
@@ -75,7 +76,7 @@ watchFrame:RegisterEvent("GARRISON_UPDATE")
 watchFrame:RegisterEvent("GARRISON_BUILDING_ACTIVATED")
 watchFrame:RegisterEvent("GARRISON_BUILDING_UPDATE")
 watchFrame:RegisterEvent("GARRISON_BUILDING_REMOVED")
-watchFrame:RegisterEvent("PLAYER_AURAS_CHANGED")
+watchFrame:RegisterEvent("UNIT_AURA")
 
 -- TODO: WoW celebration package
 local bonusBuffs = {
@@ -96,14 +97,7 @@ local bonusBuffs = {
 local TRADING_POST_LVL3_ID    = 145
 local TRADING_POST_LVL3_BONUS = 0.2
 
-local DRAENOR_MIN_MAP_ID =  941
-local DRAENOR_MAX_MAP_ID = 1009
-
-local DRAENOR_MAP_ID_EXCEPTIONS = {
-	[951] = true, -- Timeless Isle
-	[953] = true, -- Orgrimmar Raid
-	[955] = true, -- Celestial Challenge
-}
+local DRAENOR_PARENT_MAP_ID = 572
 
 local INDEX_OFFSET = 10000
 
@@ -167,8 +161,8 @@ function QFG:GetBaseBonus()
 	local exclude = {}
 	
 	-- bonus for all factions 
-	for buff, buffInfo in pairs(bonusBuffs) do
-		if not buffInfo.faction and not exclude[buff] and UnitBuff("player", buff) then
+	for buffName, buffInfo in pairs(bonusBuffs) do
+		if not buffInfo.faction and not exclude[buff] and AuraUtil.FindAuraByName(buffName, "player") then
 			bonus = bonus + buffInfo.bonus
 			
 			if buffInfo.excludes then
@@ -203,8 +197,8 @@ function QFG:GetFactionBonus(factionId)
 	local bonus = 0
 
 	-- bonus for given factions
-	for buff, buffInfo in pairs(bonusBuffs) do
-		if buffInfo.faction == factionId and UnitBuff("player", buff) then
+	for buffName, buffInfo in pairs(bonusBuffs) do
+		if buffInfo.faction == factionId and AuraUtil.FindAuraByName(buffName, "player") then
 			bonus = bonus + buffInfo.bonus
 		end
 	end
@@ -249,7 +243,7 @@ end
 -- @param questId The id of the quest to query.
 function QFG:GetQuestMapId(questId)
 	if not mapIds[questId] then
-		mapIds[questId] = GetQuestWorldMapAreaID(questId) or 0
+		mapIds[questId] = GetQuestUiMapID(questId) or 0
 	end
 	
 	return mapIds[questId]
@@ -259,9 +253,19 @@ end
 --
 -- @param questId The id of the quest to query.
 function QFG:IsDraenorQuest(questId)
+	local isDraenor = false
 	local mapId = self:GetQuestMapId(questId)
-
-	return mapId and mapId >= DRAENOR_MIN_MAP_ID and mapId <= DRAENOR_MAX_MAP_ID and not DRAENOR_MAP_ID_EXCEPTIONS[mapId] and true or false
+	
+	while mapId and C_Map.GetMapInfo(mapId) do
+		local mapInfo = C_Map.GetMapInfo(mapId)
+		if mapInfo.parentMapID == DRAENOR_PARENT_MAP_ID then
+			isDraenor = true
+			break
+		end
+		mapId = mapInfo.parentMapID
+	end
+	
+	return isDraenor
 end
 
 --- Tries to determine if player has trading post.
@@ -291,8 +295,8 @@ end
 function QFG:CheckBonusBuffs()
 	local changed = false
 	
-	for buff, buffInfo in pairs(bonusBuffs) do
-		local active = UnitBuff("player", buff) and true or nil
+	for buffName, buffInfo in pairs(bonusBuffs) do
+		local active = AuraUtil.FindAuraByName(buffName, "player") and true or nil
 		
 		if buffInfo.active ~= active then
 			buffInfo.active = active
@@ -307,8 +311,11 @@ function QFG:CheckBonusBuffs()
 end
 
 watchFrame:SetScript("OnEvent", function(self, event, ...)
-	if event == "PLAYER_AURAS_CHANGED" then
-		QFG:CheckBonusBuffs()
+	if event == "UNIT_AURA" then
+		local unit = ...
+		if unit ~= "player" then
+			QFG:CheckBonusBuffs()
+		end
 	else
 		QFG:CheckForLvl3TradingPost()
 	end

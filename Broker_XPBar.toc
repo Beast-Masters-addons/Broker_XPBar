@@ -1,4 +1,4 @@
-## Interface: 70000
+## Interface: 80000
 ## Title: Broker: |cffffffffXP|rBar
 ## Notes: Sparkly XP Bars that can be attached anywhere.
 ## Version: 2.0 r058

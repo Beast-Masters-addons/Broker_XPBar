@@ -1,6 +1,6 @@
 --[[
 Name: LibJostle-3.0
-Revision: $Rev: 55 $
+Revision: $Rev: 61 $
 Author(s): ckknight (ckknight@gmail.com)
 Website: http://ckknight.wowinterface.com/
 Documentation: http://www.wowace.com/addons/libjostle-3-0/
@@ -10,7 +10,7 @@ License: LGPL v2.1
 --]]
 
 local MAJOR_VERSION = "LibJostle-3.0"
-local MINOR_VERSION = tonumber(("$Revision: 55 $"):match("(%d+)")) + 90000
+local MINOR_VERSION = tonumber(("$Revision: 61 $"):match("(%d+)")) + 90000
 
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub") end
 
@@ -42,6 +42,8 @@ local blizzardFrames = {
 	'FramerateLabel',
 	'DurabilityFrame',
 	'CastingBarFrame',
+	'OrderHallCommandBar',
+	'MicroButtonAndBagsBar',
 }
 local blizzardFramesData = {}
 
@@ -85,7 +87,7 @@ if not Jostle.hooks.FCF_UpdateDockPosition then
 		end
 	end)
 end
-	
+
 if FCF_UpdateCombatLogPosition and not Jostle.hooks.FCF_UpdateCombatLogPosition then
 	Jostle.hooks.FCF_UpdateCombatLogPosition = true
 	hooksecurefunc("FCF_UpdateCombatLogPosition", function()
@@ -142,13 +144,13 @@ JostleFrame:UnregisterAllEvents()
 JostleFrame:SetScript("OnEvent", function(this, event, ...)
 	return Jostle[event](Jostle, ...)
 end)
-JostleFrame:RegisterEvent("PLAYER_AURAS_CHANGED")
 JostleFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 JostleFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 JostleFrame:RegisterEvent("PLAYER_CONTROL_GAINED")
+JostleFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
-function Jostle:PLAYER_AURAS_CHANGED()
-	JostleFrame:Schedule()
+function Jostle:PLAYER_ENTERING_WORLD()
+	self:Refresh(BuffFrame, PlayerFrame, TargetFrame)
 end
 
 function Jostle:WorldMapFrame_Hide()
@@ -314,14 +316,14 @@ function Jostle:Refresh(...)
 	if not fullyInitted then
 		return
 	end
-	
+
 	local screenHeight = GetScreenHeight()
 	local topOffset = self:IsTopAdjusting() and self:GetScreenTop() or screenHeight
 	local bottomOffset = self:IsBottomAdjusting() and self:GetScreenBottom() or 0
 	if topOffset ~= screenHeight or bottomOffset ~= 0 then
 		JostleFrame:Schedule(10)
 	end
-	
+
 	local frames
 	if select('#', ...) >= 1 then
 		for k in pairs(tmp) do
@@ -346,7 +348,7 @@ function Jostle:Refresh(...)
 		end
 		return
 	end
-	
+
 	local screenHeight = GetScreenHeight()
 	for _,frame in ipairs(frames) do
 		if type(frame) == "string" then
@@ -368,7 +370,7 @@ function Jostle:Refresh(...)
 			end
 		end
 	end
-	
+
 	for _,frame in ipairs(frames) do
 		if type(frame) == "string" then
 			frame = _G[frame]
@@ -394,7 +396,7 @@ function Jostle:Refresh(...)
 				DurabilityFrame:Hide()
 			elseif frame == FramerateLabel and ((frameData.lastX and not isClose(frameData.lastX, frame:GetLeft())) or not isClose(WorldFrame:GetHeight() * WorldFrame:GetScale(), UIParent:GetHeight() * UIParent:GetScale()))  then
 				-- do nothing
-			elseif frame == PlayerFrame or frame == MainMenuBar or frame == ConsolidatedBuffs or frame == CastingBarFrame or frame == TutorialFrameParent or frame == FramerateLabel or frame == DurabilityFrame or frame == WatchFrame or not (frameData.lastScale and frame.GetScale and frameData.lastScale == frame:GetScale()) or not (frameData.lastX and frameData.lastY and (not isClose(frameData.lastX, frame:GetLeft()) or not isClose(frameData.lastY, frame:GetTop()))) then
+			elseif frame == PlayerFrame or frame == MainMenuBar or frame == TargetFrame or frame == ConsolidatedBuffs or frame == BuffFrame or frame == CastingBarFrame or frame == TutorialFrameParent or frame == FramerateLabel or frame == DurabilityFrame or frame == WatchFrame or not (frameData.lastScale and frame.GetScale and frameData.lastScale == frame:GetScale()) or not (frameData.lastX and frameData.lastY and (not isClose(frameData.lastX, frame:GetLeft()) or not isClose(frameData.lastY, frame:GetTop()))) then
 				local anchor
 				local anchorAlt
 				local width, height = GetScreenWidth(), GetScreenHeight()
@@ -427,8 +429,8 @@ function Jostle:Refresh(...)
 						offset = offset - TicketStatusFrame:GetHeight() * TicketStatusFrame:GetScale()
 					elseif frame == DEFAULT_CHAT_FRAME then
 						y = MainMenuBar:GetHeight() * MainMenuBar:GetScale() + 32
-						if ShapeshiftBarFrame and (PetActionBarFrame:IsShown() or ShapeshiftBarFrame:IsShown()) then
-							offset = offset + ShapeshiftBarFrame:GetHeight() * ShapeshiftBarFrame:GetScale()
+						if StanceBarFrame and (PetActionBarFrame:IsShown() or StanceBarFrame:IsShown()) then
+							offset = offset + StanceBarFrame:GetHeight() * StanceBarFrame:GetScale()
 						end
 						if MultiBarBottomLeft:IsShown() then
 							offset = offset + MultiBarBottomLeft:GetHeight() * MultiBarBottomLeft:GetScale() - 21
@@ -440,8 +442,8 @@ function Jostle:Refresh(...)
 						end
 					elseif frame == CastingBarFrame then
 						y = MainMenuBar:GetHeight() * MainMenuBar:GetScale() + 17
-						if ShapeshiftBarFrame and (PetActionBarFrame:IsShown() or ShapeshiftBarFrame:IsShown()) then
-							offset = offset + ShapeshiftBarFrame:GetHeight() * ShapeshiftBarFrame:GetScale()
+						if StanceBarFrame and (PetActionBarFrame:IsShown() or StanceBarFrame:IsShown()) then
+							offset = offset + StanceBarFrame:GetHeight() * StanceBarFrame:GetScale()
 						end
 						if MultiBarBottomLeft:IsShown() or MultiBarBottomRight:IsShown() then
 							offset = offset + MultiBarBottomLeft:GetHeight() * MultiBarBottomLeft:GetScale()
@@ -469,6 +471,9 @@ function Jostle:Refresh(...)
 								x = x - MultiBarLeft:GetWidth() * MultiBarLeft:GetScale()
 							end
 						end
+					elseif frame == OrderHallCommandBar and OrderHallCommandBar:IsShown() then
+							anchorAlt = "TOPLEFT"
+							anchor = "TOPLEFT"
 					end
 					if frame == FramerateLabel then
 						anchorFrame = WorldFrame
@@ -478,6 +483,10 @@ function Jostle:Refresh(...)
 					blizzardFramesData[frame].lastX = frame:GetLeft()
 					blizzardFramesData[frame].lastY = frame:GetTop()
 					blizzardFramesData[frame].lastScale = framescale
+
+					if frame == OrderHallCommandBar then
+						frame:SetPoint("RIGHT", "UIParent" ,"RIGHT",0, 0);
+					end
 				end
 			end
 		end
