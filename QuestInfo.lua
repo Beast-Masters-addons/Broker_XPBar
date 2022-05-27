@@ -17,8 +17,15 @@ local LibQFG = LibStub:GetLibrary("LibQuestForGlory-1.0")
 -- modules
 local Options
 
+local is_classic = WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE
+
 -- local functions
-local GetNumQuestLogEntries    = _G.C_QuestLog.GetNumQuestLogEntries
+
+if not is_classic then
+	GetNumQuestLogEntries = _G.C_QuestLog.GetNumQuestLogEntries
+	IsQuestComplete = _G.C_QuestLog.IsComplete
+end
+
 local GetMoney                 = _G.GetMoney
 local SelectQuestLogEntry      = _G.SelectQuestLogEntry
 local GetNumQuestLeaderBoards  = _G.GetNumQuestLeaderBoards
@@ -111,10 +118,13 @@ function QuestInfo:IsQuestComplete(index, questID, money)
 	money = money and money or GetMoney()
 
 	if not questID then questID = C_QuestLog.GetQuestIDForLogIndex(index) end
-	local isComplete = C_QuestLog.IsComplete(questID)
+	local isComplete = IsQuestComplete(questID)
 	
 	local numObjectives = GetNumQuestLeaderBoards(index)
-	local requiredMoney = C_QuestLog.GetRequiredMoney(questID)	
+	local requiredMoney = 0
+	if not is_classic then
+		requiredMoney = C_QuestLog.GetRequiredMoney(questID)
+	end
 	
 	if numObjectives == 0 and requiredMoney and requiredMoney > 0 and money >= requiredMoney then
 		-- breadcrumb quest without objectives other than money
@@ -141,10 +151,16 @@ function QuestInfo:Calculate()
 		local money = GetMoney()
 		
 		for index = 1, numQuestsEntries, 1 do
-			local questTable = C_QuestLog.GetInfo(index)
-			local title = questTable.title
-			local isHeader = questTable.isHeader
-			local questId = questTable.questID
+			local title, isHeader, questId
+
+			if is_classic then
+				title, _, _, isHeader, _, _, _, questId = GetQuestLogTitle(index)
+			else
+				local questTable = C_QuestLog.GetInfo(index)
+				title = questTable.title
+				isHeader = questTable.isHeader
+				questId = questTable.questID
+			end
 			
 			if questId and questId ~= moduleData.lastFinishedQuest and not isHeader then
 				
