@@ -51,8 +51,13 @@ end
 QFG.callbacks = QFG.callbacks or LibStub("CallbackHandler-1.0"):New(QFG)
 
 -- local references
-local GetOwnedBuildingInfo   = _G.C_Garrison.GetOwnedBuildingInfo
-local GetPlots               = _G.C_Garrison.GetPlots
+local GarrisonAvailable = false
+local GetPlots, GetOwnedBuildingInfo
+if _G.C_Garrison ~= nil then
+	GetOwnedBuildingInfo   = _G.C_Garrison.GetOwnedBuildingInfo
+	GetPlots               = _G.C_Garrison.GetPlots
+	GarrisonAvailable = true
+end
 local GetQuestWorldMapAreaID = _G.GetQuestWorldMapAreaID
 local UnitBuff               = _G.UnitBuff
 
@@ -71,10 +76,12 @@ local playerHasLvl3TradingPost = nil
 -- extra effort to check for trading post (data only available when inside garrison)
 local watchFrame = CreateFrame("Frame")
 
-watchFrame:RegisterEvent("GARRISON_UPDATE")
-watchFrame:RegisterEvent("GARRISON_BUILDING_ACTIVATED")
-watchFrame:RegisterEvent("GARRISON_BUILDING_UPDATE")
-watchFrame:RegisterEvent("GARRISON_BUILDING_REMOVED")
+if GarrisonAvailable then
+	watchFrame:RegisterEvent("GARRISON_UPDATE")
+	watchFrame:RegisterEvent("GARRISON_BUILDING_ACTIVATED")
+	watchFrame:RegisterEvent("GARRISON_BUILDING_UPDATE")
+	watchFrame:RegisterEvent("GARRISON_BUILDING_REMOVED")
+end
 --watchFrame:RegisterEvent("UNIT_AURA")
 
 -- TODO: WoW celebration package
@@ -276,6 +283,10 @@ end
 --- Tries to determine if player has trading post.
 --
 function QFG:CheckForLvl3TradingPost()
+	if not GarrisonAvailable then
+		return false
+	end
+
 	local plots = GetPlots(LE_FOLLOWER_TYPE_GARRISON_6_0)
 	
 	if not plots or not next(plots) then
