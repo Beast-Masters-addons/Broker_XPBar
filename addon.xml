@@ -1,0 +1,19 @@
+<Ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.blizzard.com/wow/ui/"
+    xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
+    <Include file="Libs\LibQuestForGlory-1.0\lib.xml"/>
+    <Include file="Locales\locales.xml"/>
+    <Script file="Utilities.lua"/>
+    <Script file="Broker_XPBar.lua"/>
+    <Script file="Options.lua"/>
+    <Script file="Tooltip.lua"/>
+    <Script file="Factions.lua"/>
+    <Script file="History.lua"/>
+    <Script file="ReputationHistory.lua"/>
+    <Script file="Bar.lua"/>
+    <Script file="MinimapButton.lua"/>
+    <Script file="DataBroker.lua"/>
+    <Script file="QuestInfo.lua"/>
+    <Script file="Notifications.lua"/>
+    <Script file="TextEngine.lua"/>
+    <Script file="ScriptEnv.lua"/>
+</Ui>
