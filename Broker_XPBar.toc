@@ -1,4 +1,4 @@
-## Interface: 90200
+## Interface: 10000
 ## Title: Broker: |cffffffffXP|rBar
 ## Notes: Sparkly XP Bars that can be attached anywhere.
 ## Version: @project-version@
