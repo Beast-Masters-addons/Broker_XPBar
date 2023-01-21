@@ -1,8 +1,8 @@
-## Interface: 20504
+## Interface: 30401
 ## Title: Broker: |cffffffffXP|rBar
 ## Notes: Sparkly XP Bars that can be attached anywhere.
 ## Version: @project-version@
-## Author: tritium
+## Author: tritium / datagutten
 ## X-Credits: Wobin (For the original Fubar - XPFu), Pitbull 4 team for core logic of TextEngine module
 ## X-Category: Interface Enhancements
 ## Dependencies:
@@ -11,8 +11,8 @@
 ## X-Embeds: Ace3
 #@no-lib-strip@
 embeds.xml
-Libs\LibQuestXP-BCC\LibQuestXPDB.lua
-Libs\LibQuestXP-BCC\LibQuestXP.lua
+Libs\LibQuestXP-Wrath\LibQuestXPDB.lua
+Libs\LibQuestXP-Wrath\LibQuestXP.lua
 #@end-no-lib-strip@
 
 addon.xml
