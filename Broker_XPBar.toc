@@ -1,14 +1,16 @@
-## Interface: 10000
+## Interface: 100002
 ## Title: Broker: |cffffffffXP|rBar
 ## Notes: Sparkly XP Bars that can be attached anywhere.
 ## Version: @project-version@
-## Author: tritium
+## Author: tritium / datagutten
 ## X-Credits: Wobin (For the original Fubar - XPFu), Pitbull 4 team for core logic of TextEngine module
 ## X-Category: Interface Enhancements
 ## Dependencies:
 ## OptionalDeps: Ace3, Jostle-3.0, Crayon-3.0
 ## SavedVariables: BrokerXPBar_DB
 ## X-Embeds: Ace3
+## X-Wago-ID: 7nGvgDNx
+
 #@no-lib-strip@
 embeds.xml
 #@end-no-lib-strip@
