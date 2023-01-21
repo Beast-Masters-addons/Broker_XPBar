@@ -79,7 +79,7 @@ function MinimapButton:Create()
 	button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 	button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 	
-	local icon = button:CreateTexture(button:GetName() .. "Icon", "HIGH")
+	local icon = button:CreateTexture(button:GetName() .. "Icon", "ARTWORK")
 	icon:SetTexture(Addon:GetIcon(false))
 	icon:SetTexCoord(0, 1, 0, 1)
 	icon:SetWidth(18)
