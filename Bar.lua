@@ -8,7 +8,7 @@ local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON)
 local Bar = Addon:NewModule("Bar")
 
 -- rearrangement of blizzard's frames
-local Jostle = LibStub:GetLibrary("LibJostle-3.0", true)
+--local Jostle = LibStub:GetLibrary("LibJostle-3.0", true)
 
 local LibSharedMedia = LibStub("LibSharedMedia-3.0", true)
 
