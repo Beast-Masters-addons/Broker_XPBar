@@ -39,11 +39,16 @@ local Notifications
 local TextEngine
 
 function GetMaxDimension()
-	local index = GetCurrentResolution()
-    local resolutions = NS:NewTable(GetScreenResolutions())
-    
-    if index > 0 and index <= #resolutions then
-        x, y = resolutions[index]:match("(%d+)x(%d+)")
+    if _G.WOW_PROJECT_ID ~= _G.WOW_PROJECT_MAINLINE then
+        local index = GetCurrentResolution()
+        local resolutions = NS:NewTable(GetScreenResolutions())
+
+        if index > 0 and index <= #resolutions then
+            x, y = resolutions[index]:match("(%d+)x(%d+)")
+        else
+            x = GetScreenWidth()
+            y = GetScreenHeight()
+        end
     else
         x = GetScreenWidth()
         y = GetScreenHeight()
